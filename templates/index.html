@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Price Predictor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+          integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+</head>
+<body class="bg-dark">
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="card mt-5" style="width: 100%; height: auto;">
+            <div class="card-header text-center">
+                <h1>Car Valuation Provided by Motor Rework</h1>
+            </div>
+            <div class="card-body">
+                <div class="col-12 text-center">
+                    <h5>Find the best value for your car. Fill in the details below:</h5>
+                </div>
+                <br>
+                <form method="post" accept-charset="utf-8" name="Modelform">
+                    <!-- Company selection -->
+                    <div class="form-group col-md-10 text-center">
+                        <label><b>Select the company:</b></label>
+                        <select class="form-control" id="company" name="Company" required onchange="load_car_models(this.value)">
+                            {% for company in companies %}
+                                <option value="{{ company }}">{{ company }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <!-- Car model selection -->
+                    <div class="form-group col-md-10 text-center">
+                        <label><b>Select the model:</b></label>
+                        <select class="form-control" id="car_models" name="car_name" required>
+                            <option value="">Select a model</option>
+                        </select>
+                    </div>
+                    <!-- Year of Purchase -->
+                    <div class="col-md-10 form-group text-center">
+                        <label><b>Select Year of Purchase:</b></label><br>
+                        <select class="form-control" id="year" name="car_age" required>
+                            {% for year in range(1998, 2022) %}
+                                <option value="{{ year }}">{{ year }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Fuel type selection -->
+                    <div class="form-group col-md-10 text-center">
+                        <label><b>Select the Fuel Type:</b></label>
+                        <select class="form-control" id="fuel_type" name="fuel_type" required>
+                            {% for fuel in fuel_types %}
+                                <option value="{{ fuel }}">{{ fuel }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <!-- Kilometers driven -->
+                    <div class="form-group col-md-10 text-center">
+                        <label><b>Enter the Number of Kilometers the car has travelled:</b></label>
+                        <input type="text" class="form-control" id="kilo_driven" name="kilo_driven" placeholder="Enter kilometers driven" required>
+                    </div>
+                    <!-- Ownership selection -->
+                    <div class="form-group col-md-10 text-center">
+                        <label><b>Select Ownership Type:</b></label>
+                        <select class="form-control" id="ownership" name="ownership" required>
+                            {% for own in ownership %}
+                                <option value="{{ own }}">{{ own }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <!-- Transmission selection -->
+                    <div class="form-group col-md-10 text-center">
+                        <label><b>Select Transmission Type:</b></label>
+                        <select class="form-control" id="transmission" name="transmission" required>
+                            {% for trans in transmission %}
+                                <option value="{{ trans }}">{{ trans }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <!-- Submit button -->
+                    <div class="form-group col-md-10 text-center">
+                        <button type="button" class="btn btn-primary" onclick="send_data()">Predict Price</button>
+                    </div>
+                </form>
+                <br>
+                <!-- Prediction output -->
+                <div class="row">
+                    <div class="col-12 text-center">
+                        <h4><span id="prediction"></span></h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Function to load car models based on selected company
+    function load_car_models(company) {
+        if (company === "Select Company") {
+            $('#car_models').empty().append('<option value="">Select a model</option>');
+            return;
+        }
+
+        $.ajax({
+            url: '/get_car_models/' + company,
+            method: 'GET',
+            success: function(data) {
+                $('#car_models').empty().append('<option value="">Select a model</option>');
+                data.models.forEach(function(model) {
+                    $('#car_models').append('<option value="' + model + '">' + model + '</option>');
+                });
+                console.log("Car models loaded:", data.models); // Debugging line
+            },
+            error: function(xhr, status, error) {
+                console.error("Error fetching car models:", error); // Debugging line
+            }
+        });
+    }
+
+    // Function to send data to the server and fetch prediction
+    function send_data() {
+        var form = document.forms['Modelform'];
+        var formData = new FormData(form);
+
+        $.ajax({
+            url: '/predict',
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(result) {
+                $('#prediction').text("Estimated Price: ₹" + result);
+                console.log("Prediction received:", result); // Debugging line
+            },
+            error: function(xhr, status, error) {
+                $('#prediction').text("Error: " + xhr.responseText);
+                console.error("Error during prediction:", error); // Debugging line
+            }
+        });
+    }
+</script>
+</body>
+</html>
