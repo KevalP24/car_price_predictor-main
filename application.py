@@ -74,10 +74,10 @@ def predict():
 
         # Directly pass the raw input data to the pipeline
         prediction = model.predict(input_data)
-        print("Prediction result:", prediction)
+        predicted_price = np.expm1(prediction)
+        print("Prediction result:", predicted_price)
 
-        return str(np.round(prediction[0], 2))
-
+        return str(predicted_price)
     except Exception as e:
         print("Prediction Error:", e)
         return "Error in prediction: " + str(e), 500
